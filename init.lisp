@@ -5,5 +5,7 @@
 
 ;; function to make reloading easier.
 (defun reload ()
+  (load "benchmarks.lisp")
   (load "test.lisp"))
+
 (reload)
