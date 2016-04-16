@@ -1,5 +1,5 @@
 ;; THE TIMESTEP TO SAMPLE THE VALUES AT
-(defconstant SAMPLE-RATE 1)
+(defconstant +SAMPLE-RATE+ 1)
 
 (defun match? (pair)
   (destructuring-bind (a b) pair
@@ -51,7 +51,7 @@
 
 (defun sample-values (rows max-sample-value)
   (let ((zipped-rows (zip rows (rest rows)))
-        (sample-times (range 0 max-sample-value SAMPLE-RATE)))
+        (sample-times (range 0 max-sample-value +SAMPLE-RATE+)))
     (->
       (foldr
         'compute-next-sample
