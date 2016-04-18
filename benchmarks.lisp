@@ -16,14 +16,23 @@
        (read-stream s))))
 
 (defmacro time-sh (&rest args)
-  (let ((start-time (get-internal-real-time)))
-    `(progn
+  `(let ((start-time (get-internal-real-time)))
+     (progn
        (sh ,@args)
-       (float (infix (((get-internal-real-time) - ,start-time) / internal-time-units-per-second))))))
+       (float (infix (((get-internal-real-time) - start-time) / internal-time-units-per-second))))))
+
+(defmacro average (num body)
+  "Runs the body num times and returns the average"
+  `(/ (foldr
+        (fn (acc nv) (+ acc ,body))
+        0 (range 0 ,num 1))
+      ,num))
 
 (defconstant home-dir "/home/ug13ag2/")
 (defconstant chaste-py-dir (str home-dir "Chaste/python/"))
 (defconstant translators.py (str chaste-py-dir "pycml/translators.py"))
+(defconstant include-odeint (str " -I " home-dir "odeint/include"))
+(defconstant pipe-to " > ")
 
 (defun .cellml (n)
   (str n ".cellml"))
@@ -37,12 +46,10 @@
 (defun .out (n)
   (str n ".out"))
 
-;; short hand
-
 (defun compile-model! (model)
   (sh "python ../ConvertCellModel.py " (.cellml model) " -t Odeint")
   (sh "mv " (.cpp model) " " (.cu model))
-  (sh "nvcc -o " (.out model) " " (.cu model) " -I /home/ug13ag2/odeint/include"))
+  (sh "nvcc -o " (.out model) " " (.cu model) include-odeint))
 
 (defun use-device! ()
   (print "Configuring translator to use device now.")
@@ -56,13 +63,19 @@
   (print (str "Configuring translator to solve for " num " instances"))
   (sh "sed -i 's/INSTANCES = .*$/INSTANCES = " num "/g " translators.py))
 
-(defun run-device-instances (model num-instances output-file)
+(defun run-device-instances (model num-instances output-file num-tries)
   (use-device!)
   (set-num-instances! num-instances)
   (compile-model! model)
-  (time-sh "./" (.out model) " > " output-file))
+  (average num-tries (time-sh "./" (.out model) pipe-to output-file)))
 
+(defun run-experiment! (model)
+  (let ((time-5-instances (run-device-instances model 5 "out-5.csv" 5))
+        (time-128-instances (run-device-instances model 128 "out-128.csv"))
+        (time-512-instances (run-device-instances model 512 "out-512.csv")))
+    (print (str "8 instances took: " time-5-instances " seconds."))
+    (print (str "128 instances took: " time-128-instances " seconds."))
+    (print (str "512 instances took: " time-512-instances " seconds."))))
 
 (defun reb ()
   (load "benchmarks.lisp"))
-
