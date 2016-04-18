@@ -1,7 +1,3 @@
-
-(defmacro str (&rest args)
-  `(concatenate 'string ,@args))
-
 (defmacro e (&rest args)
   `(ext:run-shell-command ,@args))
 
@@ -17,16 +13,15 @@
 
 (defmacro time-sh (&rest args)
   `(let ((start-time (get-internal-real-time)))
-     (progn
-       (sh ,@args)
-       (float (infix (((get-internal-real-time) - start-time) / internal-time-units-per-second))))))
+     (sh ,@args)
+     (float (infix (((get-internal-real-time) - start-time) / internal-time-units-per-second)))))
 
-(defmacro average (num body)
-  "Runs the body num times and returns the average"
+(defmacro average (n body)
+  "Runs the body n times and returns the average"
   `(/ (foldr
         (fn (acc nv) (+ acc ,body))
-        0 (range 0 ,num 1))
-      ,num))
+        0 (range 0 ,n 1))
+      ,n))
 
 (defconstant home-dir "/home/ug13ag2/")
 (defconstant chaste-py-dir (str home-dir "Chaste/python/"))
