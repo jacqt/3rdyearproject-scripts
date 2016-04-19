@@ -110,10 +110,10 @@
       (print "Extracting values from csv files...")
       (compute-error (get-values table1) (get-values table2)))))
 
-(defun main (fname1 fname2)
+(defun test-files (fname1 fname2)
   (let ((table1 (cl-csv:read-csv fname1))
         (table2 (cl-csv:read-csv fname2)))
     (run table1 table2)))
 
 (defun test-me ()
-  (main #P"./out-5.csv" #P"./out-5-b.csv"))
+  (test-files #P"./out-5.csv" #P"./out-5-b.csv"))
