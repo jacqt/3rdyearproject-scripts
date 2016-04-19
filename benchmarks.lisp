@@ -33,35 +33,39 @@
 (defconstant translators.py (str chaste-py-dir "pycml/translators.py"))
 (defconstant include-odeint (str " -I " home-dir "odeint/include"))
 (defconstant pipe-to " > ")
+(defconstant priebe "priebe_beuckelmann_1998")
+
+(defun wrap-double-quotes (s)
+  (str "\"" s "\""))
 
 (defun .cellml (n)
-  (str n ".cellml"))
+  (wrap-double-quotes (str "" n ".cellml")))
 
 (defun .cu (n)
-  (str n ".cu"))
+  (wrap-double-quotes (str n ".cu")))
 
 (defun .cpp (n)
-  (str n ".cpp"))
+  (wrap-double-quotes (str n ".cpp")))
 
 (defun .out (n)
-  (str n ".out"))
+  (wrap-double-quotes (str n ".out")))
 
 (defun compile-model! (model)
-  (sh "python ../ConvertCellModel.py " (.cellml model) " -t Odeint")
+  (sh "python ../ConvertCellModel.py " (.cellml model) " -tOdeint")
   (sh "mv " (.cpp model) " " (.cu model))
   (sh "nvcc -o " (.out model) " " (.cu model) include-odeint))
 
-(defun use-device! ()
-  (print "Configuring translator to use device now.")
-  (sh "sed -i 's/USE_DEVICE = True/USE_DEVICE = False/g " translators.py))
-
 (defun use-host! ()
   (print "Configuring translator to use host now.")
-  (sh "sed -i 's/USE_DEVICE = True/USE_DEVICE = True/g " translators.py))
+  (sh "sed -i 's/USE_DEVICE = True/USE_DEVICE = False/g' " translators.py))
+
+(defun use-device! ()
+  (print "Configuring translator to use device now.")
+  (sh "sed -i 's/USE_DEVICE = False/USE_DEVICE = True/g' " translators.py))
 
 (defun set-num-instances! (num)
   (print (str "Configuring translator to solve for " num " instances"))
-  (sh "sed -i 's/INSTANCES = .*$/INSTANCES = " num "/g " translators.py))
+  (sh "sed -i 's/INSTANCES = .*$/INSTANCES = " num "/g' " translators.py))
 
 (defun run-device-instances (model num-instances output-file num-tries)
   (use-device!)
