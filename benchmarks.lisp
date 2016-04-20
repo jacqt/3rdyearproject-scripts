@@ -50,6 +50,11 @@
   (sh "mv " (.cpp model) " " (.cu model))
   (sh "nvcc -o " (.out model) " " (.cu model) include-odeint))
 
+(defun clean-up! (model)
+  (sh "rm " (.hpp model))
+  (sh "rm " (.cu model))
+  (sh "rm " (.out model)))
+
 (defun use-host! ()
   (print "Configuring translator to use host now.")
   (sh "sed -i 's/USE_DEVICE = True/USE_DEVICE = False/g' " translators.py))
@@ -62,6 +67,7 @@
   (print (str "Configuring translator to solve for " num " instances"))
   (sh "sed -i 's/INSTANCES = .*$/INSTANCES = " num "/g' " translators.py))
 
+
 (defun run-device-instances (model num-instances output-dir num-tries)
   (use-device!)
   (set-num-instances! num-instances)
@@ -69,7 +75,8 @@
   (sh "mkdir " output-dir)
   (loop for  i from 0 below num-tries
         while (< i 5)
-        collect (time-sh "./" (.out model) pipe-to "./" output-dir "/run-" i "-output.csv")))
+        collect (time-sh "./" (.out model) pipe-to "./" output-dir "/run-" i "-output.csv"))
+  (clean-up! model))
 
 (defun run-experiment! (model)
   (let ((time-5-instances (run-device-instances model 5 "priebe-device-5" 5))
