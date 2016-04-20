@@ -42,6 +42,9 @@
 (defun .cpp (n)
   (wrap-double-quotes (str n ".cpp")))
 
+(defun .hpp (n)
+  (wrap-double-quotes (str n ".hpp")))
+
 (defun .out (n)
   (wrap-double-quotes (str n ".out")))
 
