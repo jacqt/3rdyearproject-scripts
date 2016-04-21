@@ -1,3 +1,9 @@
 *~
 *.swp
 test/
+*.cpp
+*.hpp
+*.cu
+*.out
+*.cellml
+*/*
