@@ -29,6 +29,7 @@
 (defconstant include-odeint (str " -I " home-dir "odeint/include"))
 (defconstant pipe-to " > ")
 (defconstant priebe "priebe_beuckelmann_1998")
+(defconstant suppress-warnings " 2> /dev/null")
 
 (defun wrap-double-quotes (s)
   (str "\"" s "\""))
@@ -48,10 +49,11 @@
 (defun .out (n)
   (wrap-double-quotes (str n ".out")))
 
+
 (defun compile-model! (model)
-  (sh "python ../ConvertCellModel.py " (.cellml model) " -tOdeint")
+  (sh "python ../ConvertCellModel.py " (.cellml model) " -tOdeint" suppress-warnings)
   (sh "mv " (.cpp model) " " (.cu model))
-  (sh "nvcc -o " (.out model) " " (.cu model) include-odeint))
+  (sh "nvcc -o " (.out model) " " (.cu model) include-odeint suppress-warnings))
 
 (defun clean-up! (model)
   (sh "rm " (.hpp model))
@@ -78,13 +80,12 @@
   (sh "mkdir " output-dir)
   (loop for  i from 0 below num-tries
         while (< i 5)
-        collect (time-sh "./" (.out model) pipe-to "./" output-dir "/run-" i "-output.csv"))
-  (clean-up! model))
+        collect (time-sh "./" (.out model) pipe-to "./" output-dir "/run-" i "-output.csv")))
 
 (defun run-experiment! (model)
   (let ((time-5-instances (run-device-instances model 5 "priebe-device-5" 5))
-        (time-128-instances (run-device-instances model 128 "priebe-device-128.csv"))
-        (time-512-instances (run-device-instances model 512 "priebe-device-512.csv")))
+        (time-128-instances (run-device-instances model 128 "priebe-device-128.csv" 5))
+        (time-512-instances (run-device-instances model 512 "priebe-device-512.csv" 5)))
     (print (str "8 instances took: " time-5-instances " seconds."))
     (print (str "128 instances took: " time-128-instances " seconds."))
     (print (str "512 instances took: " time-512-instances " seconds."))))
